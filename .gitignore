@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production build output
+dist/
+frontend/dist/
+
+# Maven / Java
+target/
+backend/target/
+maven/
+*.class
+
+# Environment & logs
+*.log
+.env.local
+.env.*.local
+
+# IDE & Editor files
+.idea/
+*.iml
+.vscode/
+.kiro/
+.system_generated/
+.DS_Store
+Thumbs.db
