@@ -42,7 +42,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-bold text-gray-900 text-sm">Restaurant Address</h3>
                   <p className="text-sm text-gray-600 mt-0.5">
-                    Near State Of India, Gupti, Odisha 754225
+                    Near State Bank Of India, Gupti, Odisha 754225
                   </p>
                 </div>
               </div>
@@ -52,7 +52,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-bold text-gray-900 text-sm">Phone Inquiries & Reservations</h3>
                   <p className="text-sm text-gray-600 mt-0.5">
-                    <a href="tel:+91-8658027528" className="hover:text-primary-600">+91-8658027528</a> / <a href="tel:+919876543210" className="hover:text-primary-600">+91 98765 43210</a>
+                    <a href="tel:+91-8658027528" className="hover:text-primary-600">+91-8658027528</a> / <a href="tel:+91-9348800297" className="hover:text-primary-600">+91-9348800297</a>
                   </p>
                 </div>
               </div>
