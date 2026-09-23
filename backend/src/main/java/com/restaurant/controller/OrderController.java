@@ -39,9 +39,13 @@ public class OrderController {
             Authentication auth) {
         Long customerId = null;
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-            customerId = userRepository.findByEmail(auth.getName())
-                .map(com.restaurant.entity.User::getId)
-                .orElse(null);
+            boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+            if (!isAdmin) {
+                customerId = userRepository.findByEmail(auth.getName())
+                    .map(com.restaurant.entity.User::getId)
+                    .orElse(null);
+            }
         }
         OrderResponse response = orderService.createOrder(request, customerId);
         return ResponseEntity.status(HttpStatus.CREATED)

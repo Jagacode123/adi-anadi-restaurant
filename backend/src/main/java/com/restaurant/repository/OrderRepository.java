@@ -61,6 +61,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           AND (:search IS NULL OR :search = ''
                OR LOWER(o.customer.name)   LIKE LOWER(CONCAT('%', :search, '%'))
                OR LOWER(o.customer.mobile) LIKE LOWER(CONCAT('%', :search, '%'))
+               OR (o.customerName IS NOT NULL AND LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')))
+               OR (o.customerMobile IS NOT NULL AND LOWER(o.customerMobile) LIKE LOWER(CONCAT('%', :search, '%')))
                OR LOWER(o.orderNumber)     LIKE LOWER(CONCAT('%', :search, '%')))
         """)
     Page<Order> searchOrders(

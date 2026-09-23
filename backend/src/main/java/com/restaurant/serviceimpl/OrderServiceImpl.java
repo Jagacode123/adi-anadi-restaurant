@@ -50,37 +50,52 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request, Long customerId) {
+        String reqMobile = request.getMobile() != null ? request.getMobile().trim() : "";
+        String reqName   = request.getCustomerName() != null ? request.getCustomerName().trim() : "";
+        String reqEmail  = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : "";
+
         User customer;
         if (customerId != null) {
             customer = userRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found."));
+            if (!reqName.isBlank() && (customer.getName() == null || !customer.getName().equals(reqName))) {
+                customer.setName(reqName);
+                userRepository.save(customer);
+            }
         } else {
-            String mobile = request.getMobile() != null ? request.getMobile().trim() : "";
-            if (mobile.isEmpty()) {
+            if (reqMobile.isEmpty()) {
                 throw new InvalidOrderException("Mobile number is mandatory to book an order.");
             }
-            Optional<User> existingUser = userRepository.findByMobile(mobile);
+            Optional<User> existingUser = userRepository.findByMobile(reqMobile);
             if (existingUser.isPresent()) {
                 customer = existingUser.get();
-                if ((customer.getName() == null || customer.getName().isBlank())
-                    && request.getCustomerName() != null && !request.getCustomerName().isBlank()) {
-                    customer.setName(request.getCustomerName().trim());
-                    userRepository.save(customer);
+                boolean isAdmin = customer.getRoles().stream()
+                    .anyMatch(r -> "ADMIN".equalsIgnoreCase(r.getName()));
+                if (!isAdmin) {
+                    if (!reqName.isBlank()) {
+                        customer.setName(reqName);
+                    }
+                    if (!reqEmail.isBlank() && !reqEmail.equalsIgnoreCase(customer.getEmail())) {
+                        if (!userRepository.existsByEmail(reqEmail)) {
+                            customer.setEmail(reqEmail);
+                        }
+                    }
+                    customer = userRepository.save(customer);
                 }
             } else {
                 Role customerRole = roleRepository.findByName("CUSTOMER")
                     .orElseGet(() -> roleRepository.save(new Role("CUSTOMER")));
                 User newUser = new User();
-                String name = (request.getCustomerName() != null && !request.getCustomerName().isBlank())
-                    ? request.getCustomerName().trim()
-                    : ("Guest " + (mobile.length() >= 4 ? mobile.substring(mobile.length() - 4) : mobile));
+                String name = !reqName.isBlank()
+                    ? reqName
+                    : ("Guest " + (reqMobile.length() >= 4 ? reqMobile.substring(reqMobile.length() - 4) : reqMobile));
                 newUser.setName(name);
-                newUser.setMobile(mobile);
-                String email = (request.getEmail() != null && !request.getEmail().isBlank())
-                    ? request.getEmail().trim().toLowerCase()
-                    : ("guest_" + mobile + "@adianadi.com");
+                newUser.setMobile(reqMobile);
+                String email = !reqEmail.isBlank()
+                    ? reqEmail
+                    : ("guest_" + reqMobile + "@adianadi.com");
                 if (userRepository.existsByEmail(email)) {
-                    email = "guest_" + System.currentTimeMillis() + "_" + mobile + "@adianadi.com";
+                    email = "guest_" + System.currentTimeMillis() + "_" + reqMobile + "@adianadi.com";
                 }
                 newUser.setEmail(email);
                 newUser.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
@@ -117,6 +132,9 @@ public class OrderServiceImpl implements OrderService {
         // --- Build order ---
         Order order = new Order();
         order.setCustomer(customer);
+        order.setCustomerName(!reqName.isBlank() ? reqName : customer.getName());
+        order.setCustomerMobile(!reqMobile.isBlank() ? reqMobile : customer.getMobile());
+        order.setCustomerEmail(!reqEmail.isBlank() ? reqEmail : customer.getEmail());
         order.setRestaurant(restaurant);
         order.setGuestCount(request.getGuestCount());
         order.setBookingDate(request.getBookingDate());
@@ -258,11 +276,21 @@ public class OrderServiceImpl implements OrderService {
     // ── Mapping ─────────────────────────────────────────────────────────────
 
     OrderResponse toResponse(Order order) {
+        String name = order.getCustomerName() != null && !order.getCustomerName().isBlank()
+            ? order.getCustomerName()
+            : (order.getCustomer() != null ? order.getCustomer().getName() : "");
+        String mobile = order.getCustomerMobile() != null && !order.getCustomerMobile().isBlank()
+            ? order.getCustomerMobile()
+            : (order.getCustomer() != null ? order.getCustomer().getMobile() : "");
+        String email = order.getCustomerEmail() != null && !order.getCustomerEmail().isBlank()
+            ? order.getCustomerEmail()
+            : (order.getCustomer() != null ? order.getCustomer().getEmail() : "");
+
         var customerResp = com.restaurant.dto.response.UserResponse.builder()
-            .id(order.getCustomer().getId())
-            .name(order.getCustomer().getName())
-            .mobile(order.getCustomer().getMobile())
-            .email(order.getCustomer().getEmail())
+            .id(order.getCustomer() != null ? order.getCustomer().getId() : null)
+            .name(name)
+            .mobile(mobile)
+            .email(email)
             .build();
 
         var items = order.getItems().stream()
