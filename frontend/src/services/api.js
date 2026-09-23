@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://adi-anadi-restaurant.onrender.com' : 'http://localhost:8080')
+
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api`,
+  baseURL: `${API_BASE}/api`,
   headers: { 'Content-Type': 'application/json' },
   timeout: 60000,
 })
