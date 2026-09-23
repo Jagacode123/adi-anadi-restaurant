@@ -34,7 +34,7 @@ export default function LoginPage() {
       else navigate('/orders')
     } catch (err) {
       if (!err.response) {
-        setError('Cannot connect to backend server. Please ensure the backend is running on port 8080.')
+        setError('Server is starting up or taking a moment to respond. Please wait 10-20 seconds and click Sign In again.')
       } else {
         setError(err.response?.data?.message || 'Invalid email or password.')
       }
